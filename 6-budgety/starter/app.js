@@ -14,15 +14,28 @@ var budgetController = (function() {
         this.value = value;
     };
 
+    var calculateTotal = function(type) {
+        var sum = 0;
+        data.allItems[type]. forEach(function(currItem) {
+            sum = sum + currItem.value;
+        });
+        data.totals[type] = sum;
+        // if (type === 'income') {
+        // } else {
+        // }
+    }
+
     var data = {
         allItems: {
             expense: [],
             income: []
         },
         totals: {
-            exp: 0,
-            inc: 0
-        }
+            expense: 0,
+            income: 0
+        },
+        budget: 0,
+        percentage: -1
     }
     var ID = 0;
     
@@ -38,12 +51,40 @@ var budgetController = (function() {
             data.allItems[type].push(newItem);
             return newItem;
         },
+
+        calculateBudget: function() {
+            // sum of all expenses
+            calculateTotal('expense');
+        
+            // sum of all incomes
+            calculateTotal('income');
+
+            // difference (budget)  
+            data.budget = data.totals.income - data.totals.expense;
+
+            // calculate % of income that we have spent
+            if (data.totals.income > 0) {
+                data.percentage = Math.round((data.totals.expense/data.totals.income) * 100);
+            } else {
+                data.percentage = -1;
+            }
+        },
+
+        getBudget: function() {
+            return {
+                budget: data.budget,
+                totalInc: data.totals.income,
+                totalExp: data.totals.expense,
+                percentage: data.percentage
+            }
+        },
+
         testing: function () {
             console.log(data);
         }
     }
 })();
-
+// ==========================================================================================================
 // UI CONTROLLER
 var UIController = (function() {
     var DOMqueryStrings = {
@@ -52,7 +93,12 @@ var UIController = (function() {
         inputDollars: '.add__value',
         inputBtn: '.add__btn',
         incomeContainer: '.income__list',
-        expenseContainer: '.expenses__list'
+        expenseContainer: '.expenses__list',
+        budgetTotal: '.budget__value',
+        budgetIncome: '.budget__income--value',
+        budgeExpenses: '.budget__expenses--value',
+        budgeExpensesPercentage: '.budget__expenses--percentage',
+        container: '.container'
     };
     return {
         getinput: function() {
@@ -89,7 +135,7 @@ var UIController = (function() {
             newHtml = html.replace('%id%', obj.id);
             newHtml = newHtml.replace('%description%', obj.description);
             newHtml = newHtml.replace('%value%', obj.value);
-            console.log(newHtml);
+            // console.log(newHtml);
             
             // Insert htm ito the DOM
             document.querySelector(element).insertAdjacentHTML('beforeend', newHtml);
@@ -108,14 +154,31 @@ var UIController = (function() {
            fieldsArr[0].focus(); // put focus back into Description field to make inputting data easier
         },
 
+        updateBudgetUI: function(obj) {
+            var grand = '+ ';
+            if (obj.budget <= 0) {
+                grand = ' ';
+            } 
+            document.querySelector(DOMqueryStrings.budgetTotal).textContent = grand + obj.budget;
+            if (obj.percentage > 0) {
+                document.querySelector(DOMqueryStrings.budgeExpensesPercentage).textContent = obj.percentage + '%';
+            } else {
+                document.querySelector(DOMqueryStrings.budgeExpensesPercentage).textContent = '---';
+            }
+            
+            document.querySelector(DOMqueryStrings.budgeExpenses).textContent = '- ' + obj.totalExp;
+            document.querySelector(DOMqueryStrings.budgetIncome).textContent = '+ ' + obj.totalInc;
+        },
+
         getDOMstrings: function() {
             return DOMqueryStrings;
         }
     };
 }) ();
-
+// ==========================================================================================================
 // GLOBAL APP CONTROLLER
 var controller = (function(budgtetCtrl, UICtrl) {
+
     var setupEventListeners = function() {
         var DOM = UICtrl.getDOMstrings();
 
@@ -126,12 +189,20 @@ var controller = (function(budgtetCtrl, UICtrl) {
                 ctrlAddItem();
             }
         });
+
+        document.querySelector(DOM.container).addEventListener('click', ctrlDeleteItem)
     }   
     
     var updateBudget = function () {
         // 1. Calcualte the budget
+        budgtetCtrl.calculateBudget();
+
         // 2. Return the budget
+        var budget = budgtetCtrl.getBudget();
+        console.log(budget);
+
         // 3. Display the budget in the UI
+        UICtrl.updateBudgetUI(budget);
     }
 
     var ctrlAddItem = function() {
@@ -144,7 +215,7 @@ var controller = (function(budgtetCtrl, UICtrl) {
             // 2. Add the item to the budget controller
             newItem = budgetController.addItem(inputData.type, inputData.description, inputData.value);
             // console.log(newItem);
-            budgtetCtrl.testing();
+            // budgtetCtrl.testing();
 
             // 3. Add the item to the UI
             UICtrl.addListItem(newItem, inputData.type);
@@ -157,9 +228,35 @@ var controller = (function(budgtetCtrl, UICtrl) {
         }
     }
 
+    var ctrlDeleteItem = function(event) {
+        // this is a 'delagated'event handler which will be called when 
+        // a user clicks on the delete button for a budget item. This happens with
+        // bubbling up the DON tree until a node it hit that can handle an event.
+
+        // 1. Determine what was clicked in the container? it needs to be a button
+        // 2. need to don traverse up
+        var itemID, splitID, type, ID;
+        itemID= event.target.parentNode.parentNode.parentNode.parentNode.id;
+        console.log(itemID);
+        if (itemID) { //if defined or undefined
+            splitID = itemID.split('-');
+            type = splitID[0];
+            ID = splitID[1];
+
+            // 1. 
+        }
+        
+    }
+
     return {
         init: function() {
             console.log('application has started.');
+            UICtrl.updateBudgetUI({
+                budget: 0,
+                totalInc: 0,
+                totalExp: 0,
+                percentage: 0
+            })
             setupEventListeners();
         }
     };
