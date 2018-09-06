@@ -1,4 +1,4 @@
-
+// ==========================================================================================================
 // BUDGET CONTROLLER
 var budgetController = (function() {
     
@@ -52,6 +52,26 @@ var budgetController = (function() {
             return newItem;
         },
 
+        deleteItem: function(type, id) {
+            var ids, index;
+            // id = 6
+            // eg ids[1 2 4 6 8]  ==> index is 3 when id = 6
+            // nope ==> data.allItems[type][id]
+
+            //need an array of the indexes
+            ids = data.allItems[type].map(function(current) {
+                return current.id
+            });
+            index = ids.indexOf(id); // will return -1 if item is not found
+
+            // console.log(ids);
+            // console.log(index);
+
+            if (index !== -1) {
+                data.allItems[type].splice(index, 1); // this will remove 1 item at index location
+            }
+        },
+
         calculateBudget: function() {
             // sum of all expenses
             calculateTotal('expense');
@@ -98,7 +118,8 @@ var UIController = (function() {
         budgetIncome: '.budget__income--value',
         budgeExpenses: '.budget__expenses--value',
         budgeExpensesPercentage: '.budget__expenses--percentage',
-        container: '.container'
+        container: '.container',
+        listItem: '.item.clearfix'
     };
     return {
         getinput: function() {
@@ -139,6 +160,14 @@ var UIController = (function() {
             
             // Insert htm ito the DOM
             document.querySelector(element).insertAdjacentHTML('beforeend', newHtml);
+        },
+
+        deleteListItem: function(itemID) {
+            var selector, itemToDelete;
+            selector = DOMqueryStrings.listItem + '#' + itemID
+            itemToDelete = document.querySelector(selector);
+            console.log(itemToDelete);
+            itemToDelete.parentNode.removeChild(itemToDelete);
         },
 
         clearFields: function() {
@@ -239,11 +268,19 @@ var controller = (function(budgtetCtrl, UICtrl) {
         itemID= event.target.parentNode.parentNode.parentNode.parentNode.id;
         console.log(itemID);
         if (itemID) { //if defined or undefined
+            // income-# or expense-#
             splitID = itemID.split('-');
             type = splitID[0];
-            ID = splitID[1];
+            ID = parseInt(splitID[1]);
 
-            // 1. 
+            // 1. Delete th item from the data structure
+            budgtetCtrl.deleteItem(type, ID);
+
+            // 2. Delete the item from the UI
+            UICtrl.deleteListItem(itemID);
+
+            //3. Update and show the new budget/totals
+            updateBudget();    
         }
         
     }
