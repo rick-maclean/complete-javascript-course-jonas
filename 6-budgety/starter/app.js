@@ -149,8 +149,16 @@ var UIController = (function() {
         budgeExpensesPercentage: '.budget__expenses--percentage',
         container: '.container',
         listItem: '.item.clearfix',
-        itemPercentage: '.item__percentage'
+        itemPercentage: '.item__percentage',
+        monthYear: '.budget__title--month'
     };
+
+    var nodeListForEach = function(list, callback) {
+        for (var i = 0; i < list.length; i++) {
+            callback(list[i], i);
+        }
+    };
+
     return {
         getinput: function() {
             var type = document.querySelector(DOMqueryStrings.inputPlusMinus).value; // will be either inc or exp
@@ -265,6 +273,39 @@ var UIController = (function() {
             }
         },
 
+        displayMonth: function() {
+            var d = new Date();
+            var month = new Array();
+            month[0] = "January";
+            month[1] = "February";
+            month[2] = "March";
+            month[3] = "April";
+            month[4] = "May";
+            month[5] = "June";
+            month[6] = "July";
+            month[7] = "August";
+            month[8] = "September";
+            month[9] = "October";
+            month[10] = "November";
+            month[11] = "December";
+            var monthName = month[d.getMonth()];
+            console.log(monthName);
+            document.querySelector(DOMqueryStrings.monthYear).textContent = monthName + ' ' + d.getFullYear();
+        },
+
+        changedType: function(event) {
+            // change red class and red focus on the UI elements
+            var fields = document.querySelectorAll(
+                DOMqueryStrings.inputPlusMinus + ',' +
+                DOMqueryStrings.inputDescription + ',' +
+                DOMqueryStrings.inputDollars);
+
+            nodeListForEach(fields, function(cur) {
+                cur.classList.toggle('red-focus');
+            });
+            document.querySelector(DOMqueryStrings.inputBtn).classList.toggle('red');
+        },
+
         getDOMstrings: function() {
             return DOMqueryStrings;
         }
@@ -285,7 +326,9 @@ var controller = (function(budgtetCtrl, UICtrl) {
             }
         });
 
-        document.querySelector(DOM.container).addEventListener('click', ctrlDeleteItem)
+        document.querySelector(DOM.container).addEventListener('click', ctrlDeleteItem);
+
+        document.querySelector(DOM.inputPlusMinus).addEventListener('change', UICtrl.changedType);
     }   
     
     var updateBudget = function () {
@@ -381,6 +424,7 @@ var controller = (function(budgtetCtrl, UICtrl) {
                 totalExp: 0,
                 percentage: 0
             })
+            UICtrl.displayMonth();
             setupEventListeners();
         }
     };
