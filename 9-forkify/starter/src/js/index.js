@@ -1,6 +1,6 @@
 import Search from "./models/Search";
 import * as searchView from "./views/searchView";
-import { elements } from "./views/base";
+import { elements, renderLoader, clearLoader } from "./views/base";
 
 /* Global state of the app
  *- Search object
@@ -14,7 +14,7 @@ const controlSearch = async () => {
     // get query from view
     // const query = 'pizza'; //TODO
     const query = searchView.getInput();
-    console.log('Inside controlSearch');
+    // console.log('Inside controlSearch');
 
     if (query) {
         console.log('Inside controlSearch if statement');
@@ -23,25 +23,30 @@ const controlSearch = async () => {
         console.log(state.search);
 
         // prepare UI for results
+        searchView.clearInput();
+        searchView.clearResults();
+        renderLoader(elements.searchRes);
 
         // do the search for recipes
         await state.search.getResults();
 
         // render results on UI
-        console.log(state.search.recipes);
+        clearLoader();
+        // console.log(state.search.recipes);
+        searchView.renderResults(state.search.recipes);
     }
 
 }
 
 elements.searchForm.addEventListener('submit', e => {
     e.preventDefault();
-    console.log('Inside submit');
+    // console.log('Inside submit');
     controlSearch();
 });
 
 elements.searchButton.addEventListener('click', e => {
     e.preventDefault();
-    console.log('Inside click');
+    // console.log('Inside click');
     controlSearch();
 });
 
