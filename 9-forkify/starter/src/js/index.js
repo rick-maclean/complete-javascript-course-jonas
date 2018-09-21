@@ -50,6 +50,22 @@ elements.searchButton.addEventListener('click', e => {
     controlSearch();
 });
 
+// Use event deligation to put the event handler on an element that
+// exists when the page is loaded before the next/prev buttons are there.
+elements.searchResPages.addEventListener('click', e => {
+    console.log(e.target);
+    const btn = e.target.closest('.btn-inline');
+    console.log(btn);
+    if (btn) {
+        const goToPage = parseInt(btn.dataset.goto, 10);
+        console.log(goToPage);
+        searchView.clearResults();
+        searchView.renderResults(state.search.recipes, goToPage);
+    } else {
+
+    }
+});
+
 
 // const search = new Search('banana bread');
 // console.log(search);
